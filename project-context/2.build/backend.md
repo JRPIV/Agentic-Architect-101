@@ -101,14 +101,14 @@ From `recruitment-assistant`, with the Python 3.13 virtualenv:
 .venv/bin/python -m pytest
 ```
 
-Create the venv again with Python 3.13 if needed, then install `backend/requirements.txt`. Do not bind `0.0.0.0`.
+That process serves the recruiter page at `/` and the hiring-manager page at `/hiring-manager`, plus the API. Create the venv again with Python 3.13 if needed, then install `backend/requirements.txt`. Do not bind `0.0.0.0`.
 
 Fifteen tests passed on 2026-11-05. They cover F1 validation, the research and evaluation guardrails, operator-supplied names checked against the pasted leads, rank order, accept and discard, satisfaction, the single-run lock, recommendation visibility, posting-text preview, private URL rejection, the streamed 1 MB posting cap, stale-run recovery, secret redaction, and crew wiring. No test calls a model.
 
 ## Known gaps
 
-- The optional CLI from the PRD is not in this slice. The pages are still the required interface, and they belong to `@frontend.eng`.
-- This process does not serve the HTML pages. `@integration.eng` serves them from this API.
+- The optional CLI from the PRD is not in this slice. The pages are the required interface.
+- This process serves the HTML pages at `/` and `/hiring-manager`. `@integration.eng` mounted them on this API. Opening the files from disk does not reach `/api`.
 - A live model run was not executed. An unavailable model is handled as `failed` and is not marked `accepted`, but that path is not covered by a live call.
 - Preferred-versus-required weighting is in the Evaluator prompt. The code does not parse which phrase is preferred. The PRD still has that as an open question.
 - CrewAI checkpoint restore drops the method callbacks. This MVP does not resume a checkpointed crew.
@@ -157,3 +157,11 @@ Fifteen tests passed on 2026-11-05. They cover F1 validation, the research and e
 - **Tests**: `15 passed` via `.venv/bin/python -m pytest backend/tests`.
 - **Output path**: `project-context/2.build/backend.md`
 - **Handoff**: `@frontend.eng` can build the two pages against the API table. `@integration.eng` serves those pages from this process.
+
+### 2026-11-05T21:54:10-08:00
+
+- **Persona id**: `qa-eng`
+- **Action**: correct the stale statement that this process does not serve the HTML pages
+- **AAMAD_TARGET_RUNTIME**: `crewai`
+- **What changed**: Known gaps and How to run now say this process serves `/` and `/hiring-manager`. The earlier audit remains the record of the backend session. No backend code was changed.
+- **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

@@ -77,7 +77,7 @@ Browser check against `http://127.0.0.1:8000`, with `SERPER_API_KEY` empty in th
 ## Known gaps
 
 - A live model run was not executed. Accept, discard, and satisfaction were not clicked in the browser. Those transitions are covered by the stubbed API test, which drives the same routes the pages call. A draft with a real crew still needs pasted leads or `SERPER_API_KEY`, plus a model credential.
-- `frontend.md` and `backend.md` still say this process does not serve the pages. This file is the record that it does.
+- `frontend.md` and `backend.md` originally said this process does not serve the pages. QA corrected those lines. This file remains the integration record that it does.
 - The hiring-manager page still uses the full run document to tell draft, discarded, and failed apart. No status-only route was added.
 - The optional CLI is not served.
 - F6 URL preview was not clicked. Existing API tests reject a private posting URL and a non-public example URL. Pasted posting text is the demo path.
@@ -125,3 +125,11 @@ Browser check against `http://127.0.0.1:8000`, with `SERPER_API_KEY` empty in th
 - **Prompt Trace**: The operator asked to complete Step 5, review the PRD, SAD, backend.md, and frontend.md, serve the existing frontend from FastAPI at `/` and `/hiring-manager`, wire the existing API calls, verify a basic round-trip, keep the scope minimal, and document results and gaps in this file. System-prompt text is omitted.
 - **Output path**: `project-context/2.build/integration.md`
 - **Handoff**: `@qa.eng` can run the process with the command above. The pages and the API are the same origin. A live draft still needs pasted leads or search, and a model credential.
+
+### 2026-11-05T21:54:10-08:00
+
+- **Persona id**: `qa-eng`
+- **Action**: note that the "pages are not served" lines in `frontend.md` and `backend.md` were corrected
+- **AAMAD_TARGET_RUNTIME**: `crewai`
+- **What changed**: the known-gap bullet that said those files still claimed the pages were unserved. No integration code was changed.
+- **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

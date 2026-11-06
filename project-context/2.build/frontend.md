@@ -11,7 +11,7 @@
 
 ## Decisions
 
-The frontend persona file says to build a Next.js chat UI and to leave the API client to integration. SAD AD-2 and the PRD User Experience section override that. The MVP is two desktop pages and a ranking view, not a chat transcript. SAD Section 3 also assigns the API client to this epic. Integration still serves the pages from the API process and checks the wiring. This epic does not import CrewAI, read `.env`, or mount the files on FastAPI.
+The frontend persona file says to build a Next.js chat UI and to leave the API client to integration. SAD AD-2 and the PRD User Experience section override that. The MVP is two desktop pages and a ranking view, not a chat transcript. SAD Section 3 also assigns the API client to this epic. This epic does not import CrewAI, read `.env`, or mount the files on FastAPI. Integration later serves these files from that same API process.
 
 The optional CLI is out of this slice. SAD Assumptions say the two pages satisfy the PRD.
 
@@ -86,7 +86,13 @@ Rendered candidate and ranking text is assigned with `textContent`. A source URL
 
 ## How to view
 
-The API process does not serve these files yet. `@integration.eng` serves them from the same process as the API on `127.0.0.1:8000`. Opening the HTML files directly will not reach `/api`.
+The API process serves these files. From `recruitment-assistant`:
+
+```bash
+.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000/` and `http://127.0.0.1:8000/hiring-manager`. Opening the HTML files from disk does not reach `/api`.
 
 ## Verification
 
@@ -103,7 +109,7 @@ Checked in a browser against the running API, with search forced off for that pr
 
 ## Known gaps
 
-- FastAPI does not serve the pages. That remains integration work.
+- FastAPI serves the pages. That wiring is recorded in `integration.md`.
 - The optional CLI is not in this slice.
 - The hiring-manager page reads `GET /api/runs/{run_id}` so it can tell draft, discarded, and failed apart. That response includes draft fields. The page does not render them unless `GET /api/runs/{run_id}/recommendation` returns 200.
 - There is no frontend test file. The browser pass above is the check for this slice.
@@ -142,7 +148,15 @@ Checked in a browser against the running API, with search forced off for that pr
 - **Runtime warning**: `AAMAD_TARGET_RUNTIME` was unset in this agent shell and `aamad.config.yml` was not present. Resolved to `crewai` from the SAD, the PRD, and `.cursor/rules/adapter-registry.mdc`.
 - **Model**: Grok 4.7, Cursor agent session. Temperature and max_tokens were not exposed and were not set. No application crew was kicked off.
 - **Inputs read**: `project-context/1.define/prd.md`, `project-context/1.define/sad.md`, `.cursor/agents/frontend-eng.md`. `setup.md` was missing. The backend API table in `project-context/2.build/backend.md` was read so the client matches the run document the backend handoff names.
-- **Tool use**: file writes for `frontend/` and this artifact. A local preview process served the static files and forwarded `/api` to the existing FastAPI process for the browser check. Shell was used for that check because the pages are not mounted yet. No secret values were written.
+- **Tool use**: file writes for `frontend/` and this artifact. A local preview process served the static files and forwarded `/api` to the existing FastAPI process for the browser check. Shell was used for that check. At the time of this frontend session the pages were not mounted on FastAPI. Integration later mounted them. No secret values were written.
 - **Prompt Trace**: The operator asked for the frontend persona to review the PRD and SAD, implement the MVP web interface, and document decisions in `project-context/2.build/frontend.md` using `develop-fe`. System-prompt text is omitted.
 - **Output path**: `project-context/2.build/frontend.md`
 - **Handoff**: `@integration.eng` can serve `frontend/` from the API process at `/` and `/hiring-manager`. Do not add inbox, pipeline, or analytics routes.
+
+### 2026-11-05T21:54:10-08:00
+
+- **Persona id**: `qa-eng`
+- **Action**: correct the stale statements that the pages are not served
+- **AAMAD_TARGET_RUNTIME**: `crewai`
+- **What changed**: How to view, Known gaps, and the decisions paragraph now say the API process serves the pages. The frontend session's audit stays the record of that session. No frontend code was changed.
+- **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

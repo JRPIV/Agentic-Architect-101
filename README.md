@@ -2,7 +2,9 @@
 
 A mini-project that helps one recruiter turn a job requisition into a sourced shortlist, a requirement-by-requirement evaluation, and a ranked recommendation a hiring manager can read.
 
-The product is specified in [`project-context/1.define/prd.md`](project-context/1.define/prd.md). Market context is in [`project-context/1.define/mrd.md`](project-context/1.define/mrd.md). The use case follows the [CrewAI recruitment example](https://github.com/crewAIInc/crewAI-examples/tree/main/crews/recruitment), reduced to three agents. This repository is in the Define phase: the requirements exist, and the application crew is not implemented yet.
+The product is specified in [`project-context/1.define/prd.md`](project-context/1.define/prd.md). Market context is in [`project-context/1.define/mrd.md`](project-context/1.define/mrd.md). The architecture is in [`project-context/1.define/sad.md`](project-context/1.define/sad.md). The use case follows the [CrewAI recruitment example](https://github.com/crewAIInc/crewAI-examples/tree/main/crews/recruitment), reduced to three agents.
+
+**Current status:** the MVP runs locally. FastAPI serves the recruiter page, the hiring-manager page, and the API on `127.0.0.1:8000`. QA passed the automated tests and a browser pass of draft, accept, discard, satisfaction, and the hiring-manager view. That browser pass used synthetic candidates and did not call a model. A live crew run still needs `OPENAI_API_KEY`. Security assessment and Deliver are not done. Details are in [`project-context/2.build/qa.md`](project-context/2.build/qa.md).
 
 Development uses the AAMAD framework (0.7.5). Persona definitions for Cursor live in [`.cursor/agents/`](.cursor/agents/) and are summarized in [`AGENTS.md`](AGENTS.md).
 
@@ -16,7 +18,7 @@ A recruiter submits one requisition (title, description, responsibilities, requi
 
 The recruiter operates the run, reviews the draft, and accepts or discards it. The hiring manager reads the accepted ranking. People still decide whom to contact, and they do that outside this product.
 
-The selected application runtime in the PRD is CrewAI (`AAMAD_TARGET_RUNTIME` is unset; the adapter default and the PRD both resolve to `crewai`). There is no `aamad.config.yml` yet. [`aamad.config.example.yml`](aamad.config.example.yml) is a schema sample and is not loaded.
+The application runtime is CrewAI (`AAMAD_TARGET_RUNTIME` is unset; the adapter default, the PRD, and the SAD all resolve to `crewai`). There is no `aamad.config.yml`. [`aamad.config.example.yml`](aamad.config.example.yml) is a schema sample and is not loaded. The installed crew is CrewAI 1.15.36 on Python 3.13.
 
 ### Who it is for
 
@@ -47,7 +49,7 @@ This is an operator tool for a mini-project, not a commercial launch.
 - **Automated candidate evaluation.** Each sourced candidate gets a 1–5 score plus the requirements met and the requirements missing. Missing evidence scores 1.
 - **Ranked recommendations.** Highest score first. Ties keep the Researcher order. The list stays a draft until the recruiter accepts it. Accept records a timestamp and a recruiter label.
 - **Recruiter satisfaction.** A 1–5 score stored with the run after a draft exists.
-- **Job-posting intake (optional).** A posting URL or pasted posting text can fill the same requirement fields. The path is read-only. Pasted requirements are enough if this option is not built.
+- **Job-posting intake (optional).** A posting URL or pasted posting text can fill the same requirement fields. The path is read-only and does not start the crew. Pasted requirements are enough on their own.
 
 ### Not in this mini-project
 
@@ -58,7 +60,7 @@ This is an operator tool for a mini-project, not a commercial launch.
 
 ## Application architecture overview
 
-The application crew is sequential CrewAI. Delegation is off, memory is off, and each agent is capped at 12 iterations. Task order is `research_candidates`, then `evaluate_candidates`, then `recommend_candidates`. The Recommender receives the first two outputs as context. Agent and task YAML are part of Module 06; they are not in the tree yet.
+The application crew is sequential CrewAI. Delegation is off, memory is off, and each agent is capped at 12 iterations. Task order is `research_candidates`, then `evaluate_candidates`, then `recommend_candidates`. The Recommender receives the first two outputs as context. Agent and task YAML are in [`backend/config/agents.yaml`](backend/config/agents.yaml) and [`backend/config/tasks.yaml`](backend/config/tasks.yaml).
 
 ```text
 Job requirements
@@ -88,57 +90,72 @@ Draft ranking -- recruiter accepts or discards --> Hiring manager reads accepted
 | `evaluator` | Candidate Evaluator | None. Scoring stays on evidence already collected | 1–5 score, met requirements, missing requirements |
 | `recommender` | Candidate Recommender | None | Ranked recommendation. Status starts as `draft` |
 
-Planned integration, once Build starts:
+What the local process does:
 
-- A model provider key in an environment variable. The upstream example defaults to GPT-4o. This PRD does not lock the provider.
-- Optional search and page-reader keys. The upstream example uses `SerperDevTool` and `ScrapeWebsiteTool`.
-- Optional read of one job posting into the requirement fields.
-- Run output and the satisfaction score can be files. A database is not required.
-- One local process or one service. The System Architect chooses that in the SAD.
+- The model name comes from `OPENAI_MODEL` in the environment, default `gpt-4o`. The key is `OPENAI_API_KEY`. The PRD does not lock a different provider.
+- Optional search uses `SerperDevTool` and `ScrapeWebsiteTool` on the Researcher only when `SERPER_API_KEY` is set. With that key empty, pasted leads are the only source.
+- Optional posting preview reads one posting URL or pasted posting text into the requirement fields. It does not create a run and it does not write back.
+- Each run is a file under `backend/runs/{run_id}/`. A database is not used.
+- One FastAPI process serves the pages and the API on `127.0.0.1:8000`.
 - Logs record task boundaries, tool names, Researcher elapsed time, and errors. They omit secrets. `LI_AT` is not a supported variable.
 
-The recruiter UI (requirements, status, ranking, accept/discard, satisfaction) and the hiring-manager view of an accepted ranking are frontend work. They are specified in the PRD and not built.
+The recruiter page (`/`) and the hiring-manager page (`/hiring-manager`) are the interface. The recruiter submits requirements, watches the stage, and accepts or discards the draft. The hiring manager reads an accepted ranking and has no run controls.
 
 ## Getting started
-
-You can read and review the Define artifacts today. You cannot run the assistant yet. There is no crew package, no UI, and no `.env.example`.
 
 ### Prerequisites
 
 - Git
-- Python 3.14 is what this workspace used to install AAMAD. A current Python 3 is enough to read the docs
-- AAMAD in the `>=0.7.5,<0.8` range if you want the validator:
+- Python 3.13. CrewAI 1.15.36 requires Python `>=3.10,<3.14`. This workspace's `.venv` is Python 3.13.18. A default `python3` of 3.14 cannot install this backend
+- AAMAD in the `>=0.7.5,<0.8` range only if you want `aamad validate`:
 
 ```bash
 python3 -m pip install "aamad>=0.7.5,<0.8"
 ```
 
-`pip` may be absent from `PATH`. `python3 -m pip` matches the install used for this repo.
+### Install and run
 
-### Open the project
+From this directory:
 
 ```bash
-cd recruitment-assistant
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.txt
+cp .env.example .env
 ```
 
-Read, in this order:
+Edit `.env` and set `OPENAI_API_KEY` before a live crew run. Leave `SERPER_API_KEY` empty to use pasted leads only. Do not add a LinkedIn `li_at` cookie. Do not commit secret values. CrewAI loads `.env` from this directory when the crew module is imported on the first run.
+
+Start the app on localhost only:
+
+```bash
+.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
+
+Open:
+
+- Recruiter: `http://127.0.0.1:8000/`
+- Hiring manager: `http://127.0.0.1:8000/hiring-manager`
+- Health: `http://127.0.0.1:8000/health`
+
+Do not bind `0.0.0.0`. Opening the HTML files from disk does not reach `/api`.
+
+A run with a title, requirements, and pasted leads calls the model. A run with empty pasted leads and an empty `SERPER_API_KEY` fails at research and does not call the model. The ranking stays a draft until the recruiter accepts it.
+
+### Tests
+
+```bash
+.venv/bin/python -m pytest
+```
+
+The automated tests stub the crew. They do not call a model. The latest QA record is [`project-context/2.build/qa.md`](project-context/2.build/qa.md).
+
+### Read the project
 
 1. This README
 2. [`project-context/1.define/prd.md`](project-context/1.define/prd.md)
-3. [`project-context/1.define/mrd.md`](project-context/1.define/mrd.md)
-4. [`AGENTS.md`](AGENTS.md) and [`CHECKLIST.md`](CHECKLIST.md)
-
-### Check Define artifacts
-
-```bash
-aamad validate
-```
-
-The Define gate also expects `project-context/1.define/sad.md`. That file is the System Architect’s next deliverable, so validation reports it missing until Module 06 starts. `mrd.md` and `prd.md` are present and include Sources, Assumptions, Open Questions, and Audit.
-
-### Runtime keys (later, not now)
-
-When the crew exists, Build will add `.env.example` with names only. Expected names from the PRD are a model API key and, only if those options are turned on, a search key. Do not add a LinkedIn `li_at` cookie. Do not commit secret values.
+3. [`project-context/1.define/sad.md`](project-context/1.define/sad.md)
+4. [`project-context/2.build/qa.md`](project-context/2.build/qa.md)
+5. [`AGENTS.md`](AGENTS.md) and [`CHECKLIST.md`](CHECKLIST.md)
 
 ## Project structure
 
@@ -147,34 +164,29 @@ recruitment-assistant/
 ├── README.md                          # this file
 ├── AGENTS.md                          # AAMAD persona index
 ├── CHECKLIST.md                       # phase checklist from aamad init
+├── .env.example                       # variable names only
 ├── aamad.config.example.yml           # sample config; not loaded
+├── backend/                           # CrewAI crew, FastAPI, tests
+│   ├── config/agents.yaml
+│   ├── config/tasks.yaml
+│   └── app.py                         # API plus the two pages
+├── frontend/                          # recruiter and hiring-manager pages
 ├── .cursor/
-│   ├── agents/                        # Cursor personas (@product-mgr, @system.arch, …)
+│   ├── agents/                        # Cursor personas
 │   ├── rules/                         # AAMAD core, workflows, runtime adapters
-│   ├── templates/                     # MRD, PRD, SAD, SFS, story, user-guide templates
-│   └── prompts/
-├── project-context/
-│   ├── 1.define/
-│   │   ├── mrd.md                     # market research
-│   │   └── prd.md                     # product requirements (authoritative scope)
-│   ├── 2.build/                       # empty until Module 06 (setup, crew, UI, QA notes)
-│   └── 3.deliver/                     # empty until Module 07 (deploy and user guide)
+│   └── templates/
+└── project-context/
+    ├── 1.define/                      # mrd.md, prd.md, sad.md
+    ├── 2.build/                       # backend, frontend, integration, qa notes
+    └── 3.deliver/                     # empty until Deliver
 ```
-
-There is no `src/`, `config/agents.yaml`, or frontend app yet.
 
 ## Next steps for contributors
 
 Work from the PRD. Do not expand into ATS sync, candidate messaging, or analytics dashboards.
 
-1. **Resolve open questions that block design.** The list is at the end of the PRD. The ones that change Build are: whether a pasted-lead demo is enough without a search API, whether optional job-posting intake is in Module 06, which model and spend cap to use, and whether `@project.mgr` and `@security.eng` join this mini-project. They are in the AAMAD epic index and are not in the stakeholder module map.
-2. **Module 06, architecture.** `@system.arch` writes `project-context/1.define/sad.md` (and any SFS) for the three-agent sequential crew, the draft/accept gate, and the optional posting read.
-3. **Module 06, implementation.** After the SAD:
-   - `@backend.eng` implements the CrewAI crew (`researcher`, `evaluator`, `recommender`) and the run output.
-   - `@frontend.eng` builds the recruiter page and the hiring-manager view of an accepted ranking.
-   - `@integration.eng` wires the UI to the crew and, if in scope, the posting read.
-   - `@qa.eng` checks search, evaluation, ranking, the three metrics, and the out-of-scope boundaries.
-4. **Module 07, deliver.** `@devops.eng` writes deploy, CI, runbook, and user-guide notes after QA. A live deploy is not authorized by the PRD.
-5. **Keep artifacts traceable.** New product behavior belongs in the PRD first. Record assumptions and open questions rather than inventing scope in code or chat.
+1. **Security, then Deliver.** `@security.eng` is the recommended next persona. `@devops.eng` writes deploy, CI, runbook, and user-guide notes after that, or after an explicit decision to proceed without it. The PRD does not authorize a live deploy.
+2. **A live crew run is still open.** QA used synthetic candidates and did not call a model. A pasted-lead run with `OPENAI_API_KEY` is the next check of the real crew. Search stays off unless `SERPER_API_KEY` is set on purpose.
+3. **Keep artifacts traceable.** New product behavior belongs in the PRD first. Record assumptions and open questions rather than inventing scope in code or chat.
 
 Reference behavior for sourcing shape and the LinkedIn-cookie warning: [crews/recruitment](https://github.com/crewAIInc/crewAI-examples/tree/main/crews/recruitment). This project’s crew stops at Researcher, Evaluator, and Recommender.
