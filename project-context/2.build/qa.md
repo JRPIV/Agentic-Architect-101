@@ -141,7 +141,7 @@ No demo-blocking defect. No application code was changed in this pass.
 - **Timestamp**: 2026-11-05T21:54:10-08:00
 - **Persona id**: `qa-eng`
 - **Action**: `test-unit`, `test-integration`, `qa`, `verify-flow`, `log-defects`, `future-work`
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **Runtime warning**: `AAMAD_TARGET_RUNTIME` was unset in this agent shell and `aamad.config.yml` was not present. Resolved to `crewai` from the SAD, the PRD, and `.cursor/rules/adapter-registry.mdc`.
 - **Model**: Grok 4.7, Cursor agent session. Temperature and max_tokens were not exposed and were not set. The application crew was not kicked off. No live model run.
 - **LLM controls recorded for the application**: model name from `OPENAI_MODEL`, default `gpt-4o`; temperature `0.2`; max_tokens `4096`. Those controls were not used in this pass.

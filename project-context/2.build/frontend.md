@@ -144,7 +144,7 @@ Checked in a browser against the running API, with search forced off for that pr
 - **Timestamp**: 2026-11-05T21:35:00-08:00
 - **Persona id**: `frontend-eng`
 - **Action**: `develop-fe`, `style-ui`, `document-frontend`
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **Runtime warning**: `AAMAD_TARGET_RUNTIME` was unset in this agent shell and `aamad.config.yml` was not present. Resolved to `crewai` from the SAD, the PRD, and `.cursor/rules/adapter-registry.mdc`.
 - **Model**: Grok 4.7, Cursor agent session. Temperature and max_tokens were not exposed and were not set. No application crew was kicked off.
 - **Inputs read**: `project-context/1.define/prd.md`, `project-context/1.define/sad.md`, `.cursor/agents/frontend-eng.md`. `setup.md` was missing. The backend API table in `project-context/2.build/backend.md` was read so the client matches the run document the backend handoff names.
@@ -157,6 +157,6 @@ Checked in a browser against the running API, with search forced off for that pr
 
 - **Persona id**: `qa-eng`
 - **Action**: correct the stale statements that the pages are not served
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **What changed**: How to view, Known gaps, and the decisions paragraph now say the API process serves the pages. The frontend session's audit stays the record of that session. No frontend code was changed.
 - **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

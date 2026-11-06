@@ -4,7 +4,9 @@ A mini-project that helps one recruiter turn a job requisition into a sourced sh
 
 The product is specified in [`project-context/1.define/prd.md`](project-context/1.define/prd.md). Market context is in [`project-context/1.define/mrd.md`](project-context/1.define/mrd.md). The architecture is in [`project-context/1.define/sad.md`](project-context/1.define/sad.md). The use case follows the [CrewAI recruitment example](https://github.com/crewAIInc/crewAI-examples/tree/main/crews/recruitment), reduced to three agents.
 
-**Current status:** the MVP runs locally. FastAPI serves the recruiter page, the hiring-manager page, and the API on `127.0.0.1:8000`. QA passed the automated tests and a browser pass of draft, accept, discard, satisfaction, and the hiring-manager view. That browser pass used synthetic candidates and did not call a model. A live crew run still needs `OPENAI_API_KEY`. Security assessment and Deliver are not done. Details are in [`project-context/2.build/qa.md`](project-context/2.build/qa.md).
+**Current status:** Local delivery and simulated validation complete. Successful live CrewAI execution remains unverified because API credits were unavailable.
+
+FastAPI serves the recruiter page, the hiring-manager page, and the API on `127.0.0.1:8000`. Pytest reports 17 passed. Those tests stub the crew. QA's browser pass of draft, accept, discard, satisfaction, and the hiring-manager view used synthetic candidates. Neither the tests nor that browser pass proves live model behavior. A live crew call on 2026-11-05 reached OpenAI and failed during research with HTTP 429 `credit_balance_exhausted`. That run was not accepted, and it will not be retried. `security.md` is still absent and remains an accepted gap for this localhost exercise. The runbook is [`project-context/3.deliver/deploy.md`](project-context/3.deliver/deploy.md). The execution record is [`project-context/3.deliver/execution-results.md`](project-context/3.deliver/execution-results.md). The verified setup is [`project-context/2.build/setup.md`](project-context/2.build/setup.md).
 
 Development uses the AAMAD framework (0.7.5). Persona definitions for Cursor live in [`.cursor/agents/`](.cursor/agents/) and are summarized in [`AGENTS.md`](AGENTS.md).
 
@@ -18,7 +20,7 @@ A recruiter submits one requisition (title, description, responsibilities, requi
 
 The recruiter operates the run, reviews the draft, and accepts or discards it. The hiring manager reads the accepted ranking. People still decide whom to contact, and they do that outside this product.
 
-The application runtime is CrewAI (`AAMAD_TARGET_RUNTIME` is unset; the adapter default, the PRD, and the SAD all resolve to `crewai`). There is no `aamad.config.yml`. [`aamad.config.example.yml`](aamad.config.example.yml) is a schema sample and is not loaded. The installed crew is CrewAI 1.15.36 on Python 3.13.
+The application runtime is CrewAI. `AAMAD_TARGET_RUNTIME` resolves to `crewai` from the PRD, the SAD, and `.env.example`. There is no `aamad.config.yml`. [`aamad.config.example.yml`](aamad.config.example.yml) is a schema sample and is not loaded. The installed crew is CrewAI 1.15.36 on Python 3.13.
 
 ### Who it is for
 
@@ -115,21 +117,24 @@ python3 -m pip install "aamad>=0.7.5,<0.8"
 
 ### Install and run
 
-From this directory:
+From this directory. This machine's default `python3` is 3.14, which cannot install CrewAI 1.15.36. The validated interpreter is Python 3.13.18 through uv:
 
 ```bash
-python3.13 -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements.txt
+uv python find 3.13 --system
+uv venv --python 3.13 .venv
+uv pip install -r backend/requirements.txt --python .venv/bin/python
 cp .env.example .env
 ```
 
-Edit `.env` and set `OPENAI_API_KEY` before a live crew run. Leave `SERPER_API_KEY` empty to use pasted leads only. Do not add a LinkedIn `li_at` cookie. Do not commit secret values. CrewAI loads `.env` from this directory when the crew module is imported on the first run.
+Skip the `uv venv` command when `.venv` is already present. This workspace's `.venv` is Python 3.13.18. Copy `.env.example` only when `.env` is missing. Edit `.env` and set `OPENAI_API_KEY` before a live crew run. Leave `SERPER_API_KEY` empty to use pasted leads only. Leave `CREWAI_TRACING_ENABLED` false. Do not add a LinkedIn `li_at` cookie. Do not commit secret values. CrewAI loads `.env` from this directory when the crew module is imported.
 
 Start the app on localhost only:
 
 ```bash
-.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+.venv/bin/python -m backend
 ```
+
+That command binds `127.0.0.1:8000`. The same bind is what `backend/__main__.py` passes to Uvicorn.
 
 Open:
 
@@ -147,7 +152,7 @@ A run with a title, requirements, and pasted leads calls the model. A run with e
 .venv/bin/python -m pytest
 ```
 
-The automated tests stub the crew. They do not call a model. The latest QA record is [`project-context/2.build/qa.md`](project-context/2.build/qa.md).
+The automated tests stub the crew. They do not call a model. The latest QA record is [`project-context/2.build/qa.md`](project-context/2.build/qa.md). The latest execution record, including the failed live call, is [`project-context/3.deliver/execution-results.md`](project-context/3.deliver/execution-results.md).
 
 ### Read the project
 
@@ -155,17 +160,22 @@ The automated tests stub the crew. They do not call a model. The latest QA recor
 2. [`project-context/1.define/prd.md`](project-context/1.define/prd.md)
 3. [`project-context/1.define/sad.md`](project-context/1.define/sad.md)
 4. [`project-context/2.build/qa.md`](project-context/2.build/qa.md)
-5. [`AGENTS.md`](AGENTS.md) and [`CHECKLIST.md`](CHECKLIST.md)
+5. [`project-context/3.deliver/deploy.md`](project-context/3.deliver/deploy.md)
+6. [`project-context/3.deliver/execution-results.md`](project-context/3.deliver/execution-results.md)
+7. [`LESSONS.md`](LESSONS.md)
+8. [`AGENTS.md`](AGENTS.md) and [`CHECKLIST.md`](CHECKLIST.md)
 
 ## Project structure
 
 ```text
 recruitment-assistant/
 ├── README.md                          # this file
+├── LESSONS.md                         # Define, Build, Deliver, and review notes
 ├── AGENTS.md                          # AAMAD persona index
 ├── CHECKLIST.md                       # phase checklist from aamad init
 ├── .env.example                       # variable names only
 ├── aamad.config.example.yml           # sample config; not loaded
+├── Dockerfile                         # untested package of the same process
 ├── backend/                           # CrewAI crew, FastAPI, tests
 │   ├── config/agents.yaml
 │   ├── config/tasks.yaml
@@ -177,16 +187,17 @@ recruitment-assistant/
 │   └── templates/
 └── project-context/
     ├── 1.define/                      # mrd.md, prd.md, sad.md
-    ├── 2.build/                       # backend, frontend, integration, qa notes
-    └── 3.deliver/                     # empty until Deliver
+    ├── 2.build/                       # setup, backend, frontend, integration, qa notes
+    └── 3.deliver/                     # deploy.md, execution-results.md
 ```
 
 ## Next steps for contributors
 
 Work from the PRD. Do not expand into ATS sync, candidate messaging, or analytics dashboards.
 
-1. **Security, then Deliver.** `@security.eng` is the recommended next persona. `@devops.eng` writes deploy, CI, runbook, and user-guide notes after that, or after an explicit decision to proceed without it. The PRD does not authorize a live deploy.
-2. **A live crew run is still open.** QA used synthetic candidates and did not call a model. A pasted-lead run with `OPENAI_API_KEY` is the next check of the real crew. Search stays off unless `SERPER_API_KEY` is set on purpose.
-3. **Keep artifacts traceable.** New product behavior belongs in the PRD first. Record assumptions and open questions rather than inventing scope in code or chat.
+1. **Local delivery and simulated validation are complete.** The runbook, setup note, metadata logs, and execution record are in place. The PRD does not authorize a live deploy. CI and the optional user guide were left out of this closeout.
+2. **Successful live CrewAI execution remains unverified because API credits were unavailable.** The 2026-11-05 pasted-lead run, with search off, returned HTTP 429 `credit_balance_exhausted` and was not accepted. This exercise will not purchase credits or retry that call. Search stays off unless `SERPER_API_KEY` is set on purpose.
+3. **Security assessment is still a gap.** `project-context/2.build/security.md` was not written. That absence is accepted for this localhost exercise only.
+4. **Keep artifacts traceable.** New product behavior belongs in the PRD first. Record assumptions and open questions rather than inventing scope in code or chat.
 
 Reference behavior for sourcing shape and the LinkedIn-cookie warning: [crews/recruitment](https://github.com/crewAIInc/crewAI-examples/tree/main/crews/recruitment). This project’s crew stops at Researcher, Evaluator, and Recommender.

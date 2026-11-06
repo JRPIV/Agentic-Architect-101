@@ -11,7 +11,7 @@
 
 ## Runtime
 
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **CrewAI**: 1.15.36 (`crewai[tools]`). Requires Python `>=3.10,<3.14`. The machine default is Python 3.14.10, so the project venv is Python 3.13.18.
 - **LLM**: `OPENAI_MODEL` from the environment, default `gpt-4o`. Temperature `0.2`. `max_tokens` `4096`.
 - **Process**: `Process.sequential`. `memory=False`. `max_rpm=10`. `max_iter=12`. `max_retry_limit=2`. `guardrail_max_retries=2`.
@@ -147,7 +147,7 @@ Fifteen tests passed on 2026-11-05. They cover F1 validation, the research and e
 - **Timestamp**: 2026-11-05T21:13:00-08:00
 - **Persona id**: `backend-eng`
 - **Action**: `develop-be` review fixes
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **LLM**: model from `OPENAI_MODEL`, default `gpt-4o`; temperature `0.2`; max_tokens `4096`
 - **Crew controls**: sequential, memory false, max_iter 12, max_retry_limit 2, max_rpm 10, agent `max_execution_time` 900 seconds with a crew-level remaining-budget check
 - **Model**: Grok 4.7, Cursor agent session. The application crew was not kicked off.
@@ -162,6 +162,6 @@ Fifteen tests passed on 2026-11-05. They cover F1 validation, the research and e
 
 - **Persona id**: `qa-eng`
 - **Action**: correct the stale statement that this process does not serve the HTML pages
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **What changed**: Known gaps and How to run now say this process serves `/` and `/hiring-manager`. The earlier audit remains the record of the backend session. No backend code was changed.
 - **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

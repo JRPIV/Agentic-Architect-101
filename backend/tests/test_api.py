@@ -1,7 +1,9 @@
 """API tests with a stubbed crew. No model calls."""
 
 import json
+import os
 import threading
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -217,6 +219,24 @@ def test_pages_share_the_api_origin(client: TestClient):
     assert document["status"] == "failed"
     assert document["error"]["stage"] == "research"
     assert client.get(f"/api/runs/{run_id}/recommendation").status_code == 404
+    reset_executor()
+
+
+def test_request_log_records_metadata_without_candidate_text(client: TestClient, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-requestlogsecretvalue")
+    marker = "SYNTHETIC-LEAD-DO-NOT-LOG"
+    set_executor(lambda run_id: get_store().fail(run_id, "research", "stopped"))
+    created = client.post(
+        "/api/runs",
+        json={"requisition": _requisition(), "pasted_leads": marker},
+    )
+    assert created.status_code == 202
+    text = (Path(os.environ["BACKEND_LOG_DIR"]) / "app.log").read_text(encoding="utf-8")
+    assert "startup host=127.0.0.1 port=8000" in text
+    assert "request method=POST path=/api/runs status=202" in text
+    assert marker not in text
+    assert "sk-requestlogsecretvalue" not in text
+    assert "Ruby on Rails" not in text
     reset_executor()
 
 

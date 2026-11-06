@@ -34,7 +34,7 @@ Page routes return the HTML files. CSS and JS are mounted only under `/css` and 
 
 ## Runtime contract
 
-- **AAMAD_TARGET_RUNTIME**: `crewai`. Unset in this agent shell. Resolved from the SAD, the PRD, and the adapter registry default.
+- AAMAD_TARGET_RUNTIME: crewai. Unset in this agent shell. Resolved from the SAD, the PRD, and the adapter registry default.
 - **Streaming**: none. `POST /api/runs` returns `202` with `{run_id, status: researching}` as soon as the run file exists. The recruiter page and the hiring-manager page poll `GET /api/runs/{run_id}` every 2 seconds while status is `researching`, `evaluating`, or `recommending`.
 - **Create body**: `requisition` (title, description, responsibilities, requirements, preferred_qualifications, perks_and_benefits) and `pasted_leads`. Title and requirements are required.
 - **Accept body**: `{recruiter_label}`. Discard is a POST with no body. Satisfaction is `{score, comment}` with `score` an integer 1–5.
@@ -115,7 +115,7 @@ Browser check against `http://127.0.0.1:8000`, with `SERPER_API_KEY` empty in th
 - **Timestamp**: 2026-11-05T21:38:24-08:00
 - **Persona id**: `integration-eng`
 - **Action**: `integrate-api`, `verify-messageflow`, `log-integration`
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **Runtime warning**: `AAMAD_TARGET_RUNTIME` was unset in this agent shell and `aamad.config.yml` was not present. Resolved to `crewai` from the SAD, the PRD, and `.cursor/rules/adapter-registry.mdc`.
 - **Streaming**: non-streaming JSON. The UI polls. No token stream was added.
 - **Model**: Grok 4.7, Cursor agent session. Temperature and max_tokens were not exposed and were not set. The application crew was not kicked off. The checked run returned before `kickoff`.
@@ -130,6 +130,6 @@ Browser check against `http://127.0.0.1:8000`, with `SERPER_API_KEY` empty in th
 
 - **Persona id**: `qa-eng`
 - **Action**: note that the "pages are not served" lines in `frontend.md` and `backend.md` were corrected
-- **AAMAD_TARGET_RUNTIME**: `crewai`
+- AAMAD_TARGET_RUNTIME: crewai
 - **What changed**: the known-gap bullet that said those files still claimed the pages were unserved. No integration code was changed.
 - **Prompt Trace**: Included in `project-context/2.build/qa.md`. System-prompt text is omitted.

@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+**/.env
+backend/runs
+project-context/2.build/logs
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.DS_Store

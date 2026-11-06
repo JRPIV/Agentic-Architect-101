@@ -31,6 +31,9 @@ from backend.guardrails import (
 from backend.store import get_store
 from backend.trace import write_event, write_prompt_trace
 
+# CrewAI loads .env while importing. Tracing stays off unless the operator set it.
+os.environ.setdefault("CREWAI_TRACING_ENABLED", "false")
+
 ALLOWED_TOOLS = ("SerperDevTool", "ScrapeWebsiteTool")
 
 
@@ -239,6 +242,14 @@ class RecruitmentCrew:
                 "source_elapsed_ms": elapsed_ms,
             }
         )
+        write_event(
+            {
+                "run_id": self.state.run_id,
+                "event": "task_start",
+                "task": "evaluate_candidates",
+                "tools": [],
+            }
+        )
         self.state.stage = "evaluation"
 
     def _after_evaluation(self, _output: Any) -> None:
@@ -255,6 +266,14 @@ class RecruitmentCrew:
                 "run_id": self.state.run_id,
                 "event": "task_end",
                 "task": "evaluate_candidates",
+                "tools": [],
+            }
+        )
+        write_event(
+            {
+                "run_id": self.state.run_id,
+                "event": "task_start",
+                "task": "recommend_candidates",
                 "tools": [],
             }
         )
@@ -307,6 +326,7 @@ def kickoff_run(run_id: str) -> None:
             "event": "task_start",
             "task": "research_candidates",
             "tools": list(ALLOWED_TOOLS) if enabled else [],
+            "search_enabled": enabled,
         }
     )
     try:

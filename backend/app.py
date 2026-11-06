@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -21,6 +24,7 @@ from backend.constants import (
 from backend.posting import PostingError, preview_posting
 from backend.runner import start
 from backend.store import APIError, get_store
+from backend.trace import get_logger
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -74,13 +78,65 @@ class PreviewIn(BaseModel):
     text: str | None = None
 
 
+def _flag(name: str) -> str:
+    value = os.environ.get(name)
+    if value is None or value.strip() == "":
+        return "unset"
+    normalized = value.strip().lower()
+    if normalized in {"true", "false", "0", "1"}:
+        return normalized
+    return "set"
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    get_store().fail_stale()
+    logger = get_logger()
+    logger.info(
+        "startup host=127.0.0.1 port=8000 telemetry_opt_out=%s crewai_tracing=%s",
+        _flag("CREWAI_TELEMETRY_OPT_OUT"),
+        _flag("CREWAI_TRACING_ENABLED"),
+    )
+    try:
+        get_store().fail_stale()
+    except Exception as exc:
+        logger.error("startup_error error_class=%s", exc.__class__.__name__)
+        raise
     yield
+    logger.info("shutdown")
 
 
 app = FastAPI(title="Recruitment Assistant", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def log_request(request: Request, call_next):
+    started = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        get_logger().error(
+            "request method=%s path=%s status=error error_class=%s",
+            request.method,
+            request.url.path,
+            exc.__class__.__name__,
+        )
+        raise
+    status = response.status_code
+    if status >= 500:
+        level = logging.ERROR
+    elif status >= 400:
+        level = logging.WARNING
+    else:
+        level = logging.INFO
+    get_logger().log(
+        level,
+        "request method=%s path=%s status=%s elapsed_ms=%s",
+        request.method,
+        request.url.path,
+        status,
+        int((time.perf_counter() - started) * 1000),
+    )
+    return response
 
 
 @app.get("/health")
@@ -233,6 +289,14 @@ def _field_name(exc: ValidationError | RequestValidationError) -> str:
 
 
 def _error(code: str, message: str, status_code: int, stage: str | None) -> JSONResponse:
+    level = logging.ERROR if status_code >= 500 else logging.WARNING
+    get_logger().log(
+        level,
+        "api_error status=%s code=%s stage=%s",
+        status_code,
+        code,
+        stage or "",
+    )
     return JSONResponse(
         status_code=status_code,
         content={"error": {"code": code, "message": message, "stage": stage}},
