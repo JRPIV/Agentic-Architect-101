@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recruitment Assistant</title>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>Recruitment Assistant</h1>
+        <p>One requisition. The ranking stays a draft until you accept it. This page does not email candidates.</p>
+      </header>
+
+      <section>
+        <h2>Job posting (optional)</h2>
+        <p class="hint">Fill the requirement fields from a posting URL or pasted posting text. This does not start the crew.</p>
+        <div class="fields">
+          <label>
+            Posting URL
+            <input id="posting-url" type="url" name="posting_url" autocomplete="off" />
+          </label>
+          <label>
+            Pasted posting text
+            <textarea id="posting-text" name="posting_text" maxlength="20000"></textarea>
+          </label>
+        </div>
+        <div class="actions">
+          <button id="preview-posting" type="button">Fill fields</button>
+        </div>
+        <p id="preview-message" class="hint" role="status"></p>
+      </section>
+
+      <section>
+        <h2>Job requirements</h2>
+        <form id="requisition-form">
+          <div class="fields">
+            <label>
+              Title (required)
+              <input id="title" name="title" maxlength="20000" autocomplete="off" />
+            </label>
+            <label>
+              Description
+              <textarea id="description" name="description" maxlength="20000"></textarea>
+            </label>
+            <label>
+              Responsibilities
+              <textarea id="responsibilities" name="responsibilities" maxlength="20000"></textarea>
+            </label>
+            <label>
+              Requirements (required)
+              <textarea id="requirements" name="requirements" maxlength="20000"></textarea>
+            </label>
+            <label>
+              Preferred qualifications
+              <textarea id="preferred_qualifications" name="preferred_qualifications" maxlength="20000"></textarea>
+            </label>
+            <label>
+              Perks and benefits
+              <textarea id="perks_and_benefits" name="perks_and_benefits" maxlength="20000"></textarea>
+            </label>
+            <label>
+              Pasted leads (optional)
+              <textarea id="pasted_leads" name="pasted_leads" maxlength="50000"></textarea>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="run" type="submit">Run</button>
+            <p id="run-hint" class="hint">Add a title and requirements before running.</p>
+          </div>
+        </form>
+        <p id="form-error" class="alert hidden" role="alert"></p>
+      </section>
+
+      <section>
+        <h2>Run</h2>
+        <p id="status" class="status" role="status">Status: no run yet.</p>
+        <p id="source-time">Source time: not recorded yet.</p>
+        <p id="run-id" class="hint"></p>
+        <p id="manager-link" class="hint"></p>
+      </section>
+
+      <section>
+        <h2>Sourced candidates</h2>
+        <div id="candidates"><p>No sourced candidates yet.</p></div>
+      </section>
+
+      <section>
+        <h2>Evaluations</h2>
+        <div id="evaluations"><p>No evaluations yet.</p></div>
+      </section>
+
+      <section>
+        <h2>Ranked recommendations</h2>
+        <div id="ranking">
+          <p>This ranking supports the recruiter and the hiring manager. Contact decisions happen outside this product.</p>
+          <p>No ranking yet.</p>
+        </div>
+        <form id="decision-form">
+          <div class="fields">
+            <label>
+              Recruiter label (required to accept)
+              <input id="recruiter-label" name="recruiter_label" maxlength="200" autocomplete="name" />
+            </label>
+          </div>
+          <div class="actions">
+            <button id="accept" type="button" disabled>Accept</button>
+            <button id="discard" class="secondary" type="button" disabled>Discard</button>
+          </div>
+          <div id="discard-confirm" class="hidden">
+            <p>Discard this draft? It stays readable here and is not shown to the hiring manager as a recommendation.</p>
+            <button id="discard-yes" type="button">Discard draft</button>
+            <button id="discard-no" class="secondary" type="button">Keep draft</button>
+          </div>
+        </form>
+        <p id="decision-error" class="alert hidden" role="alert"></p>
+      </section>
+
+      <section>
+        <h2>Satisfaction</h2>
+        <p class="hint">Score this run from 1 to 5 after a draft exists.</p>
+        <form id="satisfaction-form">
+          <div class="scores" role="radiogroup" aria-label="Satisfaction score from 1 to 5">
+            <label><input type="radio" name="score" value="1" /> 1</label>
+            <label><input type="radio" name="score" value="2" /> 2</label>
+            <label><input type="radio" name="score" value="3" /> 3</label>
+            <label><input type="radio" name="score" value="4" /> 4</label>
+            <label><input type="radio" name="score" value="5" /> 5</label>
+          </div>
+          <div class="fields">
+            <label>
+              Comment (optional)
+              <textarea id="comment" name="comment" maxlength="2000"></textarea>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="save-score" type="submit" disabled>Save score</button>
+          </div>
+        </form>
+        <p id="score-message" class="hint" role="status"></p>
+      </section>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/render.js"></script>
+    <script src="/js/recruiter.js"></script>
+  </body>
+</html>

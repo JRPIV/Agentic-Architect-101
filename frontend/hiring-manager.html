@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hiring manager — Recruitment Assistant</title>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>Hiring manager</h1>
+        <p>Accepted rankings only. This page has no run, accept, or discard controls, and it does not contact candidates.</p>
+      </header>
+
+      <section>
+        <h2>Open a run</h2>
+        <form id="open-run">
+          <div class="fields">
+            <label>
+              Run id
+              <input id="run-id-input" name="run_id" autocomplete="off" />
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit">Open</button>
+            <button id="check-again" class="secondary" type="button">Check again</button>
+          </div>
+        </form>
+        <p class="hint">Use the run id from the recruiter. This page does not list other runs.</p>
+      </section>
+
+      <section>
+        <h2>Recommendation</h2>
+        <p id="status" class="status" role="status">Status: no run selected.</p>
+        <p id="notice"></p>
+        <div id="ranking"></div>
+      </section>
+    </main>
+    <script src="/js/api.js"></script>
+    <script src="/js/render.js"></script>
+    <script src="/js/hiring-manager.js"></script>
+  </body>
+</html>
