@@ -1,0 +1,62 @@
+research_candidates:
+  description: >
+    Source candidates for one requisition. Use only the job requirements and
+    the pasted leads below. When search_enabled is false, use pasted leads
+    only and do not browse. When search_enabled is true, you may add public
+    web leads, and each of those leads must include the page URL you read.
+    Never invent a person, an employer, or a contact detail. Never use
+    LinkedIn session cookies. Return at most 10 candidates. If the pasted
+    leads are empty and search is off, return a JSON object with an empty
+    candidates list.
+    search_enabled: {search_enabled}
+    Job requirements:
+    {job_requirements}
+    Pasted leads:
+    {pasted_leads}
+  expected_output: >
+    Plain JSON, with no code fence, shaped as
+    {"candidates":[{"id":"c1","name":"","summary":"","source_type":"operator-supplied","source_url":"","email":null,"phone":null}]}.
+    source_type is operator-supplied or web. source_url is required for web
+    and empty for operator-supplied. email and phone are null unless they
+    appeared in the pasted text or on the cited page. The list length is 1
+    to 10 when any lead exists.
+  agent: researcher
+
+evaluate_candidates:
+  description: >
+    Evaluate only the candidates in the Researcher output. Do not add a
+    person. For each candidate id, score the fit to the job requirements
+    from 1 to 5. List the requirement phrases that are met and the
+    requirement phrases that are missing. A preferred qualification cannot
+    by itself outweigh a missing required skill. If the candidate has no
+    usable evidence, set score to 1 and set evidence_note to "The evidence
+    is missing."
+    Job requirements:
+    {job_requirements}
+  expected_output: >
+    Plain JSON, with no code fence, shaped as
+    {"evaluations":[{"candidate_id":"c1","score":1,"met_requirements":[],"missing_requirements":[],"evidence_note":""}]}.
+    Include every Researcher id and no other id. score is an integer from
+    1 to 5.
+  agent: evaluator
+  context:
+    - research_candidates
+
+recommend_candidates:
+  description: >
+    Write a short recommendation a hiring manager can read. Use only the
+    Researcher candidates and the Evaluator scores. Do not add a person.
+    Do not draft outreach, email, InMail, or a send action. Order ids by
+    score, highest first. When scores tie, keep the Researcher list order.
+    The summary states that contact decisions happen outside this product.
+    Job requirements:
+    {job_requirements}
+  expected_output: >
+    Plain JSON, with no code fence, shaped as
+    {"ordered_candidate_ids":["c1"],"summary":"","rows":[{"candidate_id":"c1","source_type":"operator-supplied","source_url":"","score":1,"met_requirements":[],"missing_requirements":[]}]}.
+    Do not include outreach, email_draft, or inmail fields. The API renders
+    the markdown recommendation from this JSON.
+  agent: recommender
+  context:
+    - research_candidates
+    - evaluate_candidates

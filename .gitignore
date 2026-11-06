@@ -1,0 +1,8 @@
+# Local environment settings
+.env
+.venv/
+__pycache__/
+*.pyc
+backend/runs/
+project-context/2.build/logs/*
+!project-context/2.build/logs/.gitkeep
