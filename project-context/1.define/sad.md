@@ -254,15 +254,18 @@ Accept writes `accepted_at` and `recruiter_label` into `run.json`. Discard write
 
 No login and no session cookie for users. Protection for the mini-project is localhost binding plus filesystem permissions on `backend/runs/`.
 
-`.env.example` names only:
+Checked-in `.env.example` names only:
 
 | Name | Required | Purpose |
 | --- | --- | --- |
 | `OPENAI_API_KEY` | Yes for the example model path | Model provider credential. The upstream example uses GPT-4o. Build may change the provider and must then record the real variable name in `setup.md`. |
-| `OPENAI_MODEL_NAME` | No | Model id. Build records the resolved value in its audit. |
-| `SERPER_API_KEY` | No | Enables Researcher search and page reader. Absent means pasted leads only. |
+| `OPENAI_MODEL` | No | Model id in the current example file. Default there is `gpt-4o`. Build records the resolved value in its audit. |
+| `AAMAD_TARGET_RUNTIME` | No | Must stay `crewai` for this SAD. |
+| `APP_NAME` | No | Display name. |
+| `APP_ENV` | No | `development` for the local process. |
+| `CREWAI_TELEMETRY_OPT_OUT` | No | Set `true` so the mini-project does not send CrewAI telemetry. |
 
-`LI_AT` is not a variable. Do not add it.
+Build adds `SERPER_API_KEY` to `.env.example` only if search is enabled. When that name is absent, the Researcher has no web tools and pasted leads are the only source. `LI_AT` is not a variable. Do not add it.
 
 ## 5. DevOps & Deployment Architecture
 
@@ -433,9 +436,9 @@ After the first local run, fix guardrail failures and empty-search behavior befo
 
 ## Assumptions
 
-- `AAMAD_TARGET_RUNTIME` is unset and `aamad.config.yml` is absent. This SAD resolves `crewai`, matching the PRD, the adapter registry default, and the operator request to record that value. `aamad.config.example.yml` was not loaded.
+- `AAMAD_TARGET_RUNTIME` was unset in this session and `aamad.config.yml` is absent. This SAD resolves `crewai`, matching the PRD, the adapter registry default, `.env.example`, and the operator request to record that value. `aamad.config.example.yml` was read as a schema only. Its `runtime.target: crewai` matches. Its `security.require_security_assessment: true` is why Section 9 still recommends `@security.eng` before Deliver even though the PRD module map does not assign that persona.
 - FastAPI, static HTML/CSS/JS, localhost port 8000, polling, file-per-run storage, `max_rpm` 10, and the character caps are architecture defaults where the PRD is silent. They are not new product features.
-- `OPENAI_API_KEY` and `OPENAI_MODEL_NAME` are the env names for the example’s GPT-4o path. A different provider changes the names in `setup.md` and does not change the crew.
+- `OPENAI_API_KEY` and `OPENAI_MODEL` are the env names in the checked-in `.env.example` for the example’s GPT-4o path. If the installed CrewAI build reads a different model variable, Build maps `OPENAI_MODEL` to that name and records it in `setup.md`. A different provider changes the names and does not change the crew.
 - F6 pasted text is in the recruiter form. F6 URL fetch is specified so integration can build it, and it may still be dropped for the first demo (PRD open question).
 - `backend/runs/` lives until someone deletes it. That is a storage default, not a retention decision.
 - The optional CLI is out of the first Build slice. The two pages satisfy the PRD.
@@ -452,13 +455,13 @@ After the first local run, fix guardrail failures and empty-search behavior befo
 
 ## Audit
 
-- **Timestamp**: 2026-11-05T20:47:00-08:00
+- **Timestamp**: 2026-11-05T20:50:00-08:00
 - **Persona id**: `system-arch`
 - **Action**: `create-sad`
 - **AAMAD_TARGET_RUNTIME**: `crewai`
-- **Runtime warning**: the environment variable was unset and `aamad.config.yml` was not present. Resolved to `crewai` by `.cursor/rules/adapter-registry.mdc`, the PRD Selected Runtime, and the operator instruction to record `crewai`.
+- **Runtime warning**: the environment variable was unset in this session and `aamad.config.yml` was not present. Resolved to `crewai` by `.cursor/rules/adapter-registry.mdc`, the PRD Selected Runtime, and the operator instruction to record `crewai`. `.env.example` also sets `AAMAD_TARGET_RUNTIME=crewai`.
 - **Model**: Grok 4.7, Cursor agent session. Temperature and max_tokens were not exposed and were not set by the operator. No crew was executed.
-- **Inputs read**: `project-context/1.define/prd.md`, `project-context/1.define/mrd.md` (via the PRD citations and prior Define work), `.cursor/templates/sad-template.md`, `.cursor/agents/system-arch.md`, `.cursor/rules/adapter-crewai.mdc`. No user stories exist.
-- **Prompt Trace**: Operator asked `@system.arch` to review the PRD, follow the SAD template, design the Researcher, Evaluator, and Recommender CrewAI crew, define the minimal frontend, backend API, and integration points, record `AAMAD_TARGET_RUNTIME=crewai` in Audit, include Sources, Assumptions, Open Questions, Audit, and MVP security considerations, and save `project-context/1.define/sad.md` for review before code. System-prompt text is omitted.
+- **Inputs read**: `project-context/1.define/prd.md`, `project-context/1.define/mrd.md`, `.cursor/templates/sad-template.md`, `.cursor/agents/system-arch.md`, `.cursor/rules/adapter-crewai.mdc`, `.env.example`, `aamad.config.example.yml` (schema only; not copied to `aamad.config.yml`). No user stories exist.
+- **Prompt Trace**: Operator asked the system architect to review the PRD, follow the SAD template, design the Researcher, Evaluator, and Recommender CrewAI crew, define the minimal frontend, backend API, and integration points, record `AAMAD_TARGET_RUNTIME=crewai` in Audit, include Sources, Assumptions, Open Questions, Audit, and MVP security considerations, and save `project-context/1.define/sad.md` for review before code. System-prompt text is omitted.
 - **Output path**: `project-context/1.define/sad.md`
-- **Handoff**: Ready for review. No application code, pipeline, or third-party integration was added.
+- **Handoff**: Ready for review. No application code, pipeline, or third-party integration was added. Secret names in Section 4 were aligned to the checked-in `.env.example`.
