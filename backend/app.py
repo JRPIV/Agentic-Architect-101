@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
 from backend.constants import (
@@ -19,6 +21,8 @@ from backend.constants import (
 from backend.posting import PostingError, preview_posting
 from backend.runner import start
 from backend.store import APIError, get_store
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 REQUISITION_FIELDS = (
     "title",
@@ -158,6 +162,20 @@ def preview(body: PreviewIn) -> JSONResponse:
     except PostingError as exc:
         return _error("posting_fetch_failed", exc.message, 502, None)
     return JSONResponse(content={"requisition": requisition})
+
+
+@app.get("/", include_in_schema=False)
+def recruiter_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+@app.get("/hiring-manager", include_in_schema=False)
+def hiring_manager_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "hiring-manager.html")
+
+
+app.mount("/css", StaticFiles(directory=FRONTEND_DIR / "css"), name="frontend-css")
+app.mount("/js", StaticFiles(directory=FRONTEND_DIR / "js"), name="frontend-js")
 
 
 @app.exception_handler(APIError)

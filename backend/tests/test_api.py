@@ -176,6 +176,50 @@ def test_startup_marks_stale_run_failed(tmp_path, monkeypatch):
     reset_store()
 
 
+def test_pages_share_the_api_origin(client: TestClient):
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "text/html" in home.headers["content-type"]
+    assert "/js/api.js" in home.text
+    assert 'id="run"' in home.text
+    manager = client.get("/hiring-manager")
+    assert manager.status_code == 200
+    assert "text/html" in manager.headers["content-type"]
+    assert "/js/hiring-manager.js" in manager.text
+    assert 'id="run"' not in manager.text
+    assert 'id="accept"' not in manager.text
+    assert 'id="discard"' not in manager.text
+    script = client.get("/js/api.js")
+    assert script.status_code == 200
+    assert "/api/runs" in script.text
+    assert "/api/postings/preview" in script.text
+    assert client.get("/css/app.css").status_code == 200
+    assert client.get("/health").json()["status"] == "ok"
+
+    preview = client.post(
+        "/api/postings/preview",
+        json={"text": "Staff Engineer\n\nRequirements\nPython\n"},
+    )
+    assert preview.status_code == 200
+    assert preview.json()["requisition"]["title"] == "Staff Engineer"
+
+    set_executor(lambda run_id: get_store().fail(run_id, "research", "No pasted leads and search is off."))
+    created = client.post(
+        "/api/runs",
+        json={"requisition": _requisition(title="Staff Engineer", requirements="Python"), "pasted_leads": ""},
+    )
+    assert created.status_code == 202
+    run_id = created.json()["run_id"]
+    for _ in range(50):
+        document = client.get(f"/api/runs/{run_id}").json()
+        if document["status"] != "researching":
+            break
+    assert document["status"] == "failed"
+    assert document["error"]["stage"] == "research"
+    assert client.get(f"/api/runs/{run_id}/recommendation").status_code == 404
+    reset_executor()
+
+
 def test_log_redacts_secret_values(monkeypatch, tmp_path):
     monkeypatch.setenv("BACKEND_LOG_DIR", str(tmp_path))
     monkeypatch.setenv("OPENAI_API_KEY", "sk-testsecretvalue")
